@@ -33,6 +33,9 @@ class Canvas(QWidget):
 
     epsilon = 11.0
 
+    ctrlPress = False
+    shiftPress = False
+
     def __init__(self, *args, **kwargs):
         super(Canvas, self).__init__(*args, **kwargs)
         # Initialise local state.
@@ -567,21 +570,96 @@ class Canvas(QWidget):
 
     def keyPressEvent(self, ev):
         key = ev.key()
-        if key == Qt.Key_Escape and self.current:
-            print('ESC press')
-            self.current = None
-            self.drawingPolygon.emit(False)
-            self.update()
-        elif key == Qt.Key_Return and self.canCloseShape():
-            self.finalise()
-        elif key == Qt.Key_Left and self.selectedShape:
-            self.moveOnePixel('Left')
-        elif key == Qt.Key_Right and self.selectedShape:
-            self.moveOnePixel('Right')
-        elif key == Qt.Key_Up and self.selectedShape:
-            self.moveOnePixel('Up')
-        elif key == Qt.Key_Down and self.selectedShape:
-            self.moveOnePixel('Down')
+
+        if key == Qt.Key_Control:
+            self.ctrlPress = True
+        if key == Qt.Key_Shift:
+            self.shiftPress = True
+
+        if not self.ctrlPress and not self.shiftPress:
+            if key == Qt.Key_Escape and self.current:
+                print('ESC press')
+                self.current = None
+                self.drawingPolygon.emit(False)
+                self.update()
+            elif key == Qt.Key_Return and self.canCloseShape():
+                self.finalise()
+            elif key == Qt.Key_Left and self.selectedShape:
+                self.moveOnePixel('Left')
+            elif key == Qt.Key_Right and self.selectedShape:
+                self.moveOnePixel('Right')
+            elif key == Qt.Key_Up and self.selectedShape:
+                self.moveOnePixel('Up')
+            elif key == Qt.Key_Down and self.selectedShape:
+                self.moveOnePixel('Down')
+        else:
+            if self.shiftPress and not self.ctrlPress:
+                if key == Qt.Key_Left and self.selectedShape:
+                    self.expandOnePixel('Left')
+                elif key == Qt.Key_Right and self.selectedShape:
+                    self.expandOnePixel('Right')
+                elif key == Qt.Key_Up and self.selectedShape:
+                    self.expandOnePixel('Up')
+                elif key == Qt.Key_Down and self.selectedShape:
+                    self.expandOnePixel('Down')
+
+            if self.ctrlPress and not self.shiftPress:
+                if key == Qt.Key_Left and self.selectedShape:
+                    self.lessenOnePixel('Left')
+                elif key == Qt.Key_Right and self.selectedShape:
+                    self.lessenOnePixel('Right')
+                elif key == Qt.Key_Up and self.selectedShape:
+                    self.lessenOnePixel('Up')
+                elif key == Qt.Key_Down and self.selectedShape:
+                    self.lessenOnePixel('Down')
+
+    def keyReleaseEvent(self, ev):
+        key = ev.key()
+
+        if key == Qt.Key_Control:
+            self.ctrlPress = False
+        if key == Qt.Key_Shift:
+            self.shiftPress = False
+
+    def expandOnePixel(self, direction):
+        if direction == 'Left' and not self.moveOutOfBound(QPointF(-1.0, 0)):
+            # print('Expand Left')
+            self.selectedShape.points[0] += QPointF(-1.0, 0)
+            self.selectedShape.points[3] += QPointF(-1.0, 0)
+        elif direction == 'Right' and not self.moveOutOfBound(QPointF(1.0, 0)):
+            # print('Expand Right')
+            self.selectedShape.points[1] += QPointF(1.0, 0)
+            self.selectedShape.points[2] += QPointF(1.0, 0)
+        elif direction == 'Up' and not self.moveOutOfBound(QPointF(0, -1.0)):
+            # print('Expand Up')
+            self.selectedShape.points[0] += QPointF(0, -1.0)
+            self.selectedShape.points[1] += QPointF(0, -1.0)
+        elif direction == 'Down' and not self.moveOutOfBound(QPointF(0, 1.0)):
+            # print('Expand Down')
+            self.selectedShape.points[2] += QPointF(0, 1.0)
+            self.selectedShape.points[3] += QPointF(0, 1.0)
+        self.shapeMoved.emit()
+        self.repaint()
+
+    def lessenOnePixel(self, direction):
+        if direction == 'Left':
+            # print('Lessen Left')
+            self.selectedShape.points[0] += QPointF(1.0, 0)
+            self.selectedShape.points[3] += QPointF(1.0, 0)
+        elif direction == 'Right':
+            # print('Lessen Right')
+            self.selectedShape.points[1] += QPointF(-1.0, 0)
+            self.selectedShape.points[2] += QPointF(-1.0, 0)
+        elif direction == 'Up':
+            # print('Lessen Up')
+            self.selectedShape.points[0] += QPointF(0, 1.0)
+            self.selectedShape.points[1] += QPointF(0, 1.0)
+        elif direction == 'Down':
+            # print('Lessen Down')
+            self.selectedShape.points[2] += QPointF(0, -1.0)
+            self.selectedShape.points[3] += QPointF(0, -1.0)
+        self.shapeMoved.emit()
+        self.repaint()
 
     def moveOnePixel(self, direction):
         # print(self.selectedShape.points)
