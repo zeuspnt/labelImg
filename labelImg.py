@@ -1223,6 +1223,7 @@ class MainWindow(QMainWindow, WindowMixin):
             filename = self.mImgList[currIndex - 1]
             if filename:
                 self.loadFile(filename)
+                print('({}/{})'.format(currIndex, len(self.mImgList)))
 
     def openNextImg(self, _value=False):
         # Proceding prev image without dialog if having any label
@@ -1247,6 +1248,7 @@ class MainWindow(QMainWindow, WindowMixin):
             currIndex = self.mImgList.index(self.filePath)
             if currIndex + 1 < len(self.mImgList):
                 filename = self.mImgList[currIndex + 1]
+                print('({}/{})'.format(currIndex, len(self.mImgList)))
 
         if filename:
             self.loadFile(filename)
