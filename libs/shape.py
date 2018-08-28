@@ -65,7 +65,7 @@ class Shape(object):
         self._closed = True
 
     def reachMaxPoints(self):
-        if len(self.points) >= 4:
+        if len(self.points) >= 18:
             return True
         return False
 
@@ -84,6 +84,26 @@ class Shape(object):
     def setOpen(self):
         self._closed = False
 
+    def drawPose(self, painter):
+        poseMap = [(0,1), (0,14), (0,15), (1,2), (1,5), (1,8), (1,11), (2,3), (3,4), (5,6), (6,7), (8,9), (9,10), (11,12), (12,13), (14,16), (15,17)]
+        if self.points:
+            #color = self.select_line_color if self.selected else self.line_color
+            #pen = QPen(color)
+            # Try using integer sizes for smoother drawing(?)
+            #pen.setWidth(max(1, int(round(2.0 / self.scale))))
+            #painter.setPen(pen)
+            
+            line_path = QPainterPath()
+            
+            for link in poseMap:
+                p1 = self.points[link[0]]
+                p2 = self.points[link[1]]
+                if p1.isNull() or p2.isNull():
+                    continue
+                line_path.moveTo(p1)
+                line_path.lineTo(p2)
+            painter.drawPath(line_path)
+
     def paint(self, painter):
         if self.points:
             color = self.select_line_color if self.selected else self.line_color
@@ -92,22 +112,24 @@ class Shape(object):
             pen.setWidth(max(1, int(round(2.0 / self.scale))))
             painter.setPen(pen)
 
+            self.drawPose(painter)
+
             line_path = QPainterPath()
             vrtx_path = QPainterPath()
 
-            line_path.moveTo(self.points[0])
+            #line_path.moveTo(self.points[0])
             # Uncommenting the following line will draw 2 paths
             # for the 1st vertex, and make it non-filled, which
             # may be desirable.
             #self.drawVertex(vrtx_path, 0)
 
             for i, p in enumerate(self.points):
-                line_path.lineTo(p)
+                #line_path.lineTo(p)
                 self.drawVertex(vrtx_path, i)
-            if self.isClosed():
-                line_path.lineTo(self.points[0])
+            #if self.isClosed():
+            #    line_path.lineTo(self.points[0])
 
-            painter.drawPath(line_path)
+            #painter.drawPath(line_path)
             painter.drawPath(vrtx_path)
             painter.fillPath(vrtx_path, self.vertex_fill_color)
 
@@ -137,6 +159,7 @@ class Shape(object):
         d = self.point_size / self.scale
         shape = self.point_type
         point = self.points[i]
+        if point.isNull(): return
         if i == self._highlightIndex:
             size, shape = self._highlightSettings[self._highlightMode]
             d *= size

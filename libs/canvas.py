@@ -199,6 +199,7 @@ class Canvas(QWidget):
             self.overrideCursor(CURSOR_DEFAULT)
 
     def mousePressEvent(self, ev):
+        print("mousePressEvent")
         pos = self.transformPos(ev.pos())
 
         if ev.button() == Qt.LeftButton:
@@ -398,6 +399,7 @@ class Canvas(QWidget):
             self.boundedMoveShape(shape, point + offset)
 
     def paintEvent(self, event):
+        print("paintEvent")
         if not self.pixmap:
             return super(Canvas, self).paintEvent(event)
 

@@ -52,7 +52,7 @@ import cv2
 # If you run `make install` (default path is `/usr/local/python` for Ubuntu), you can also access the OpenPose/python module from there.
 # This will install OpenPose and the python library at your desired installation path.
 # Ensure that this is in your python path in order to use it.
-sys.path.append('/usr/local/python')
+'''sys.path.append('/usr/local/python')
 try:
     from openpose import openpose as op
 except:
@@ -73,7 +73,7 @@ params["disable_blending"] = False
 # Ensure you point to the correct path where models are located
 params["default_model_folder"] = "/home/ai/cuda-workspace/openpose/models/"
 # Construct OpenPose object allocates GPU memory
-openpose = op.OpenPose(params)
+openpose = op.OpenPose(params)'''
 
 __appname__ = 'labelImg Edition with openpose'
 
@@ -1450,15 +1450,44 @@ class MainWindow(QMainWindow, WindowMixin):
             shape.paintLabel = paintLabelsOptionChecked
 
     def poseEstimate(self, _value=False):
-        if self.filePath is None:
+        '''if self.filePath is None:
             self.errorMessage(u'No image loaded',
                     u'You must loaded at least one image to detect.')
             return
-        print(self.filePath)
-        img = cv2.imread(self.filePath)
+        print(self.filePath)'''
+        keypoints = np.array([[56.59303284,245.90769958],
+ [51.3837204,238.06002808],
+ [16.15428162,245.84100342],
+ [48.79832077,318.93603516],
+ [63.16319275,349.00228882],
+ [87.90565491,232.80381775],
+ [110.13336945,285.00073242],
+ [120.5700531,325.50848389],
+ [57.91036606,328.09835815],
+ [82.73122406,381.62088013],
+ [103.62808228,424.68887329],
+ [90.5812149,316.36975098],
+ [110.07565308,371.15896606],
+ [121.92186737,412.98025513],
+ [46.18438721,241.93707275],
+ [60.5321846,235.4887085 ],
+ [29.23197746,234.09220886],
+ [68.32454681,223.62820435]])
+        print(keypoints)
+        self.loadFile('/extHDD2/Raw_Datasets/50/20180505090000/images/20180505093700_0125.jpg')
+        points = []
+        for key in keypoints:
+            points.append((key[0], key[1]))
+        shape = [("pose", points, None, None, False)]
+        self.loadLabels(shape)
+        
+        '''img = cv2.imread(self.filePath)
         keypoints, output_image = openpose.forward(img, True)
         print(keypoints)
-        cv2.imshow("", output_image)
+        cv2.imshow("", output_image)'''
+
+def drawHumanPose(img, keypoints):
+    
 
 def inverted(color):
     return QColor(*[255 - v for v in color.getRgb()])
