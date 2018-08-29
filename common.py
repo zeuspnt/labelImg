@@ -1,13 +1,13 @@
 from enum import Enum
 
-import tensorflow as tf
+#import tensorflow as tf
 import cv2
 
 
 regularizer_conv = 0.004
 regularizer_dsconv = 0.0004
 batchnorm_fused = True
-activation_fn = tf.nn.relu
+#activation_fn = tf.nn.relu
 
 
 class CocoPart(Enum):

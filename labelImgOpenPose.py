@@ -48,6 +48,8 @@ from libs.version import __version__
 # import for openpose
 import numpy as np
 import cv2
+import common
+from common import CocoPart
 
 # If you run `make install` (default path is `/usr/local/python` for Ubuntu), you can also access the OpenPose/python module from there.
 # This will install OpenPose and the python library at your desired installation path.
@@ -1474,20 +1476,35 @@ class MainWindow(QMainWindow, WindowMixin):
  [29.23197746,234.09220886],
  [68.32454681,223.62820435]])
         print(keypoints)
-        self.loadFile('/extHDD2/Raw_Datasets/50/20180505090000/images/20180505093700_0125.jpg')
+        self.loadFile('/home/thaopn/Downloads/stand.jpg')
         points = []
         for key in keypoints:
             points.append((key[0], key[1]))
         shape = [("pose", points, None, None, False)]
         self.loadLabels(shape)
         
-        '''img = cv2.imread(self.filePath)
+        img = cv2.imread(self.filePath)
+        drawHumanPose(img, keypoints)
+        '''
         keypoints, output_image = openpose.forward(img, True)
         print(keypoints)
         cv2.imshow("", output_image)'''
 
 def drawHumanPose(img, keypoints):
-    
+    # draw point 
+    for i, key in enumerate(keypoints):
+        if int(key[0]) == 0 and int(key[1]) == 0: 
+            continue
+        p = (int(key[0]), int(key[1]))
+        cv2.circle(img, p, 3, common.CocoColors[i], thickness=3, lineType=8, shift=0)
+        
+    # draw line
+    for i, pair in enumerate(common.CocoPairsRender):
+        p1 = (int(keypoints[pair[0]][0]), int(keypoints[pair[0]][1]))
+        p2 = (int(keypoints[pair[1]][0]), int(keypoints[pair[1]][1]))
+        cv2.line(img, p1, p2, common.CocoColors[i], 3)
+        
+    cv2.imshow("example", img)
 
 def inverted(color):
     return QColor(*[255 - v for v in color.getRgb()])
