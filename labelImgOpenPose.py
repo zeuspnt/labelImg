@@ -50,11 +50,13 @@ import numpy as np
 import cv2
 import common
 from common import CocoPart
+import string
+import random
 
 # If you run `make install` (default path is `/usr/local/python` for Ubuntu), you can also access the OpenPose/python module from there.
 # This will install OpenPose and the python library at your desired installation path.
 # Ensure that this is in your python path in order to use it.
-'''sys.path.append('/usr/local/python')
+sys.path.append('/usr/local/python')
 try:
     from openpose import openpose as op
 except:
@@ -75,7 +77,7 @@ params["disable_blending"] = False
 # Ensure you point to the correct path where models are located
 params["default_model_folder"] = "/home/ai/cuda-workspace/openpose/models/"
 # Construct OpenPose object allocates GPU memory
-openpose = op.OpenPose(params)'''
+openpose = op.OpenPose(params)
 
 __appname__ = 'labelImg Edition with openpose'
 
@@ -355,6 +357,8 @@ class MainWindow(QMainWindow, WindowMixin):
         shapeFillColor = action('Shape &Fill Color', self.chshapeFillColor,
                                 icon='color', tip=u'Change the fill color for this specific shape',
                                 enabled=False)
+        
+        savePose = action('Save Pose', self.savePose, icon='save', tip=u'Save pose', enabled=True)
 
         labels = self.dock.toggleViewAction()
         labels.setText('Show/Hide Label Panel')
@@ -380,7 +384,7 @@ class MainWindow(QMainWindow, WindowMixin):
                               beginner=(), advanced=(),
                               editMenu=(edit, copy, delete,
                                         None, color1),
-                              beginnerContext=(create, edit, copy, delete),
+                              beginnerContext=(savePose, edit, copy, delete),
                               advancedContext=(createMode, editMode, edit, copy,
                                                delete, shapeLineColor, shapeFillColor),
                               onLoadActive=(
@@ -456,6 +460,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.fit_window = False
         # Add Chris
         self.difficult = False
+        self.savedPath = None
 
         ## Fix the compatible issue for qt4 and qt5. Convert the QStringList to python list
         if settings.get(SETTING_RECENT_FILES):
@@ -1218,7 +1223,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def verifyImg(self, _value=False):
         # Proceding next image without dialog if having any label
-         if self.filePath is not None:
+        if self.filePath is not None:
             try:
                 self.labelFile.toggleVerify()
             except AttributeError:
@@ -1451,59 +1456,143 @@ class MainWindow(QMainWindow, WindowMixin):
         for shape in self.canvas.shapes:
             shape.paintLabel = paintLabelsOptionChecked
 
+    def changePoseSavedirDialog(self, _value=False):
+        if self.savedPath is not None:
+            path = ustr(self.savedPath)
+        else:
+            path = '.'
+
+        dirpath = ustr(QFileDialog.getExistingDirectory(self,
+                                                       '%s - Save pose results to the directory by pose\'s label' % __appname__, path,  QFileDialog.ShowDirsOnly
+                                                       | QFileDialog.DontResolveSymlinks))
+
+        if dirpath is not None and len(dirpath) > 1:
+            self.savedPath = dirpath
+
+        self.statusBar().showMessage('%s . Pose results will be saved to %s' %
+                                     ('Change saved folder', self.savedPath))
+        self.statusBar().show()
+
+    def savePose(self, _value=False):
+        print("save pose")
+        item = self.currentItem()
+        if item is None: 
+            return
+        shape = self.itemsToShapes[item]
+        print(shape.points)
+        image = np.zeros(cv2.imread(self.filePath).shape, dtype=np.uint8)
+        image.fill(255)
+        image = drawHumanPoseWithPoints(image, shape.points)
+        #cv2.imshow("crop", image)
+        text = self.labelDialog.popUp(item.text())
+        print(text)
+        if text is None:
+            return
+        # get locate to save pose images
+        if self.savedPath is None:
+            self.changePoseSavedirDialog()
+        
+        fileName = "{}_{}.jpg".format(text, id_generator())
+        desPath = os.path.join(self.savedPath, text)
+        if not os.path.isdir(desPath):
+            os.mkdir(desPath)
+        desPath = os.path.join(desPath, fileName)
+        
+        #cv2.imshow("test", img)
+        cv2.imwrite(desPath, image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+
     def poseEstimate(self, _value=False):
-        '''if self.filePath is None:
+        ''''if self.filePath is None:
             self.errorMessage(u'No image loaded',
                     u'You must loaded at least one image to detect.')
             return
         print(self.filePath)'''
-        keypoints = np.array([[56.59303284,245.90769958],
- [51.3837204,238.06002808],
- [16.15428162,245.84100342],
- [48.79832077,318.93603516],
- [63.16319275,349.00228882],
- [87.90565491,232.80381775],
- [110.13336945,285.00073242],
- [120.5700531,325.50848389],
- [57.91036606,328.09835815],
- [82.73122406,381.62088013],
- [103.62808228,424.68887329],
- [90.5812149,316.36975098],
- [110.07565308,371.15896606],
- [121.92186737,412.98025513],
- [46.18438721,241.93707275],
- [60.5321846,235.4887085 ],
- [29.23197746,234.09220886],
- [68.32454681,223.62820435]])
-        print(keypoints)
-        self.loadFile('/home/thaopn/Downloads/stand.jpg')
-        points = []
-        for key in keypoints:
-            points.append((key[0], key[1]))
-        shape = [("pose", points, None, None, False)]
-        self.loadLabels(shape)
-        
+
+        self.loadFile('/home/ai/cuda-workspace/openpose/examples/media/20180505093700_0125.jpg')
+        print(self.filePath)
         img = cv2.imread(self.filePath)
-        drawHumanPose(img, keypoints)
-        '''
+
         keypoints, output_image = openpose.forward(img, True)
         print(keypoints)
-        cv2.imshow("", output_image)'''
+        #cv2.imshow("", output_image)
+        shapes = []
+        for human in keypoints:
+            humanKeypoints = human[:,:-1]
+            points = []
+            
+            for key in humanKeypoints:
+                points.append((key[0], key[1]))
+            shapes.append(("pose", points, None, None, False))
+        self.loadLabels(shapes)
+
+        #points = []
+        #for key in keypoints:
+            #points.append((key[0], key[1]))
+        #shape = [("pose", points, None, None, False)]
+        #self.loadLabels(shape)
+
+        #img = cv2.imread(self.filePath)
+        #drawHumanPose(img, keypoints)
+        
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+def drawHumanPoseWithPoints(img, points):
+    # draw point
+    for i, point in enumerate(points):
+        if point.isNull():
+            continue
+        p = point.toPoint()
+
+        cv2.circle(img, (p.x(), p.y()), 3, common.CocoColors[i], thickness=3, lineType=8, shift=0)
+        
+    # draw line
+    for i, pair in enumerate(common.CocoPairsRender):
+        if points[pair[0]].isNull() or points[pair[1]].isNull():
+            continue
+        
+        tmpPoint = points[pair[0]].toPoint()
+        p1 = (tmpPoint.x(), tmpPoint.y())
+        
+        tmpPoint = points[pair[1]].toPoint()
+        p2 = (tmpPoint.x(), tmpPoint.y())
+        
+        cv2.line(img, p1, p2, common.CocoColors[i], 3)
+    
+    x_coordinations = []
+    y_coordinations = []
+    for p in points:
+        point = p.toPoint()
+        if point.isNull():
+            continue
+        x_coordinations.append(point.x())
+        y_coordinations.append(point.y())
+
+    padding = 30
+    x_max = min(max(x_coordinations) + padding, img.shape[0])
+    x_min = max(min(x_coordinations) - padding, 0)
+    
+    y_max = min(max(y_coordinations) + padding, img.shape[1])
+    y_min = max(min(y_coordinations) - padding, 0)
+
+    crop_img = img[y_min:y_max, x_min:x_max]
+    
+    return crop_img
 
 def drawHumanPose(img, keypoints):
-    # draw point 
+    # draw point
     for i, key in enumerate(keypoints):
-        if int(key[0]) == 0 and int(key[1]) == 0: 
+        if int(key[0]) == 0 and int(key[1]) == 0:
             continue
         p = (int(key[0]), int(key[1]))
         cv2.circle(img, p, 3, common.CocoColors[i], thickness=3, lineType=8, shift=0)
-        
+
     # draw line
     for i, pair in enumerate(common.CocoPairsRender):
         p1 = (int(keypoints[pair[0]][0]), int(keypoints[pair[0]][1]))
         p2 = (int(keypoints[pair[1]][0]), int(keypoints[pair[1]][1]))
         cv2.line(img, p1, p2, common.CocoColors[i], 3)
-        
+
     cv2.imshow("example", img)
 
 def inverted(color):

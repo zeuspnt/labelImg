@@ -289,6 +289,7 @@ class Canvas(QWidget):
             self.finalise()
 
     def selectShape(self, shape):
+        #print(shape.points)
         self.deSelectShape()
         shape.selected = True
         self.selectedShape = shape
@@ -319,6 +320,9 @@ class Canvas(QWidget):
         self.offsets = QPointF(x1, y1), QPointF(x2, y2)
 
     def boundedMoveVertex(self, pos):
+        # Prevent move any point 
+        return
+    '''
         index, shape = self.hVertex, self.hShape
         point = shape[index]
         if self.outOfPixmap(pos):
@@ -338,10 +342,12 @@ class Canvas(QWidget):
             lshift = QPointF(shiftPos.x(), 0)
             rshift = QPointF(0, shiftPos.y())
         shape.moveVertexBy(rindex, rshift)
-        shape.moveVertexBy(lindex, lshift)
+        shape.moveVertexBy(lindex, lshift)'''
 
     def boundedMoveShape(self, shape, pos):
-        if self.outOfPixmap(pos):
+        # prevent move shape
+        return False
+        '''if self.outOfPixmap(pos):
             return False  # No need to move
         o1 = pos + self.offsets[0]
         if self.outOfPixmap(o1):
@@ -360,7 +366,7 @@ class Canvas(QWidget):
             shape.moveBy(dp)
             self.prevPoint = pos
             return True
-        return False
+        return False'''
 
     def deSelectShape(self):
         if self.selectedShape:
@@ -399,7 +405,6 @@ class Canvas(QWidget):
             self.boundedMoveShape(shape, point + offset)
 
     def paintEvent(self, event):
-        print("paintEvent")
         if not self.pixmap:
             return super(Canvas, self).paintEvent(event)
 
