@@ -37,7 +37,7 @@ Open file ```labelImgOpenPose.py``` and edit at line 78
 # Ensure you point to the correct path where models are located
 params["default_model_folder"] = "folder/path/to/models/in/openpose"
 ```
-usually, it will at ```../openpose/models/```
+usually, it will at ```.../openpose/models/```
 
 6. Run
 ```
