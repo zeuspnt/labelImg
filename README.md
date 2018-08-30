@@ -8,6 +8,7 @@
 ## Quick Start:
 
 1. Install lib for labelImg
+Python3 and Qt5
 ```
 sudo apt-get install pyqt5-dev-tools
 sudo pip3 install lxml
