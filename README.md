@@ -6,8 +6,17 @@
 ### OpenPose: https://github.com/CMU-Perceptual-Computing-Lab/openpose
 
 ## Quick Start:
+1. Clone source
+```
+git clone https://github.com/zeuspnt/labelImg.git
+```
 
-1. Install lib for labelImg
+2. Checkout branch to ```labelimgwithpose```
+```
+ git checkout labelimgwithpose
+```
+
+3. Install lib for labelImg
 Python3 and Qt5
 ```
 sudo apt-get install pyqt5-dev-tools
@@ -15,13 +24,13 @@ sudo pip3 install lxml
 make qt5py3
 ```
 
-2. Install OpenPose
+4. Install OpenPose
 
 https://github.com/CMU-Perceptual-Computing-Lab/openpose/blob/master/doc/installation.md
 
 Run ```make install``` after build successfully.
 
-3. Edit some information
+5. Edit some information
 
 Open file ```labelImgOpenPose.py``` and edit at line 78
 ```
@@ -29,7 +38,7 @@ Open file ```labelImgOpenPose.py``` and edit at line 78
 params["default_model_folder"] = "folder/path/to/models/in/openpose"
 ```
 
-4. Run
+6. Run
 ```
 python3 labelImgOpenPose.py
 ```
