@@ -1502,13 +1502,13 @@ class MainWindow(QMainWindow, WindowMixin):
         cv2.imwrite(desPath, image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
 
     def poseEstimate(self, _value=False):
-        ''''if self.filePath is None:
+        if self.filePath is None:
             self.errorMessage(u'No image loaded',
                     u'You must loaded at least one image to detect.')
             return
-        print(self.filePath)'''
+        print(self.filePath)
 
-        self.loadFile('/home/ai/cuda-workspace/openpose/examples/media/20180505093700_0125.jpg')
+        self.loadFile(self.filePath)
         print(self.filePath)
         img = cv2.imread(self.filePath)
 
