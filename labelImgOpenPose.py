@@ -152,6 +152,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.screencast = "https://youtu.be/p0nR2YsCY_U"
 
         # Load predefined classes to the list
+        self.defaultPrefdefClassFile = defaultPrefdefClassFile
         self.loadPredefinedClasses(defaultPrefdefClassFile)
 
         # Main widgets and related state.
@@ -863,6 +864,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
     # Callback functions:
     def newShape(self):
+        return
         """Pop-up and give focus to the label editor.
 
         position MUST be in global coordinates.
@@ -1424,6 +1426,12 @@ class MainWindow(QMainWindow, WindowMixin):
                         self.labelHist = [line]
                     else:
                         self.labelHist.append(line)
+                        
+    def savePredefinedClasses(self, predefClassesFile):
+        if os.path.exists(predefClassesFile) is True:
+            with codecs.open(predefClassesFile, 'w', 'utf8') as f:
+                for label in self.labelHist:
+                    f.writelines("{}\n".format(label))
 
     def loadPascalXMLByFilename(self, xmlPath):
         if self.filePath is None:
@@ -1447,7 +1455,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_YOLO)
         tYoloParseReader = YoloReader(txtPath, self.image)
         shapes = tYoloParseReader.getShapes()
-        print (shapes)
+        print(shapes)
         self.loadLabels(shapes)
         self.canvas.verified = tYoloParseReader.verified
 
@@ -1480,27 +1488,46 @@ class MainWindow(QMainWindow, WindowMixin):
             return
         shape = self.itemsToShapes[item]
         print(shape.points)
+        
+        # Create a white image with the same size with origin image
         image = np.zeros(cv2.imread(self.filePath).shape, dtype=np.uint8)
         image.fill(255)
         image = drawHumanPoseWithPoints(image, shape.points)
-        #cv2.imshow("crop", image)
+        
         text = self.labelDialog.popUp(item.text())
         print(text)
         if text is None:
             return
+        
+        if text not in self.labelHist:
+            self.labelHist.append(text)
+            self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
+            # Save PredefinedClasses file
+            self.savePredefinedClasses(self.defaultPrefdefClassFile)
+        
         # get locate to save pose images
         if self.savedPath is None:
             self.changePoseSavedirDialog()
         
-        fileName = "{}_{}.jpg".format(text, id_generator())
+        fileName = "{}_{}".format(text, id_generator())
         desPath = os.path.join(self.savedPath, text)
         if not os.path.isdir(desPath):
             os.mkdir(desPath)
-        desPath = os.path.join(desPath, fileName)
+            
+        imgDesPath = os.path.join(desPath, fileName + ".jpg")
+        txtDesPath = os.path.join(desPath, fileName + ".txt")
         
-        #cv2.imshow("test", img)
-        cv2.imwrite(desPath, image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
-
+        cv2.imwrite(imgDesPath, image, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+        
+        # Save text pose (keypoints with cooordination from key 0 to key 17)
+        keypointsString = ""
+        for point in shape.points:
+            p = point.toPoint()
+            keypointsString += "{}, {}, ".format(p.x(), p.y())
+        print("keypoints: {}".format(keypointsString[:-2]))
+        with open(txtDesPath, "w") as textFile:
+            textFile.write(keypointsString[:-2])
+        
     def poseEstimate(self, _value=False):
         if self.filePath is None:
             self.errorMessage(u'No image loaded',
@@ -1513,8 +1540,7 @@ class MainWindow(QMainWindow, WindowMixin):
         img = cv2.imread(self.filePath)
 
         keypoints, output_image = openpose.forward(img, True)
-        print(keypoints)
-        #cv2.imshow("", output_image)
+
         shapes = []
         for human in keypoints:
             humanKeypoints = human[:,:-1]
@@ -1524,15 +1550,6 @@ class MainWindow(QMainWindow, WindowMixin):
                 points.append((key[0], key[1]))
             shapes.append(("pose", points, None, None, False))
         self.loadLabels(shapes)
-
-        #points = []
-        #for key in keypoints:
-            #points.append((key[0], key[1]))
-        #shape = [("pose", points, None, None, False)]
-        #self.loadLabels(shape)
-
-        #img = cv2.imread(self.filePath)
-        #drawHumanPose(img, keypoints)
         
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
