@@ -63,14 +63,7 @@ def saveKeypointsOfImage(imagePath, keypoints):
         os.mkdir(dirPathSavedKeypoints)
         
     keypointsFileName = os.path.join(dirPathSavedKeypoints, nameWithoutExt) + '.txt'
-    
-    '''keypointsString = ""
-    for point in shape.points:
-        p = point.toPoint()
-        keypointsString += "{}, {}, ".format(p.x(), p.y())
-    print("keypoints: {}".format(keypointsString[:-2]))
-    with open(txtDesPath, "w") as textFile:
-        textFile.write("{}\n".format(keypointsString[:-2]))'''
+
     allKeypointsString = ""
     for key in keypoints:
         keypointsString = ""
@@ -79,16 +72,9 @@ def saveKeypointsOfImage(imagePath, keypoints):
         allKeypointsString += keypointsString[:-2] + "\n"
     
     with open(keypointsFileName, 'w') as f:
-        f.write(allKeypointsString)
-        
-    
-    '''
-    get file name
-    up to 1 level of directory tree
-    create a folder with name: keypoints
-    save all keypoints by text file with file name be the same with image file
-    done
-    '''
+        f.write(allKeypointsString)           
+            
+    print(keypointsFileName)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Extract keypoints from an image and save it to a text file with same name')
@@ -101,6 +87,5 @@ if __name__ == '__main__':
         images = scanAllImages(args.imagedir)
         for image in images:
             keypoints = getKeypointsOfImage(image)
-            #print(keypoints)
             saveKeypointsOfImage(image, keypoints)
             
