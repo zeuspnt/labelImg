@@ -43,3 +43,30 @@ usually, it will at ```.../openpose/models/```
 ```
 python3 labelImgOpenPose.py
 ```
+## Extract keypoints from OpenPose to txt file (extractKeypointsWithOpenPose.py)
+
+### Run with argument
+
+```
+python extractKeypointsWithOpenPose.py --imagedir=/home/ai/cuda-workspace/labelImg/examples/images/
+```
+
+Get all images in path at parameter ```--imagedir``` to pass into Openpose and save keypoints in txt file in keypoints directory with structure:
+```
+examples
+|
+---- images
+|  |
+|   ---- COCO_val2014_000000000474.jpg
+---- keypoints
+   |
+    ---- COCO_val2014_000000000474.txt
+```
+
+## Review result be extracted (labelImgOpenPoseTXT.py)
+
+```
+python labelImgOpenPoseTXT.py
+```
+
+Click on ```Open dir``` to open folder images, the app will automate load txt files in keypoints folder and draw that pose on images.
