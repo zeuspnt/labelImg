@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import codecs
 import distutils.spawn
@@ -56,8 +56,8 @@ import random
 # If you run `make install` (default path is `/usr/local/python` for Ubuntu), you can also access the OpenPose/python module from there.
 # This will install OpenPose and the python library at your desired installation path.
 # Ensure that this is in your python path in order to use it.
-'''sys.path.append('/usr/local/python')
-try:
+sys.path.append('/usr/local/python')
+'''try:
     from openpose import openpose as op
 except:
     raise Exception('Error: OpenPose library could not be found. Did you enable `BUILD_PYTHON` in CMake and have this Python script in the right folder?')
@@ -1487,9 +1487,9 @@ class MainWindow(QMainWindow, WindowMixin):
         else:
             path = '.'
 
-        dirpath = ustr(QFileDialog.getExistingDirectory(self,
+        dirpath = QFileDialog.getExistingDirectory(self,
                                                        '%s - Save pose results to the directory by pose\'s label' % __appname__, path,  QFileDialog.ShowDirsOnly
-                                                       | QFileDialog.DontResolveSymlinks))
+                                                       | QFileDialog.DontResolveSymlinks)
 
         if dirpath is not None and len(dirpath) > 1:
             self.savedPath = dirpath
@@ -1511,8 +1511,8 @@ class MainWindow(QMainWindow, WindowMixin):
         image.fill(255)
         image = drawHumanPoseWithPoints(image, shape.points)
         
-        text = self.labelDialog.popUp(item.text())
-        print(text)
+        text = ustr(self.labelDialog.popUp(item.text()))
+        #print(text)
         if text is None:
             return
         
@@ -1525,9 +1525,13 @@ class MainWindow(QMainWindow, WindowMixin):
         # get locate to save pose images
         if self.savedPath is None:
             self.changePoseSavedirDialog()
-        
-        fileName = "{}_{}".format(text, id_generator())
-        desPath = os.path.join(self.savedPath, text)
+        savedPath = ustr(self.savedPath)
+        nameWithoutExt = os.path.basename(os.path.splitext(self.filePath)[0])
+        fileName = "{}_{}".format(nameWithoutExt, id_generator())
+        #print(type(savedPath))
+        #print(type(self.savedPath))
+        #print(type(text))
+        desPath = os.path.join(savedPath, text)
         if not os.path.isdir(desPath):
             os.mkdir(desPath)
             
@@ -1600,7 +1604,7 @@ class MainWindow(QMainWindow, WindowMixin):
                     if i+1 >= lenght:
                         break
                     points.append((int(float(pList[i])), int(float(pList[i+1]))))
-                shapes.append(("pose", points, None, None, False))
+                shapes.append(("standing", points, None, None, False))
             self.loadLabels(shapes)
                 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
