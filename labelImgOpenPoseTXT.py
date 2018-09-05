@@ -90,7 +90,6 @@ def have_qstring():
 def util_qt_strlistclass():
     return QStringList if have_qstring() else list
 
-
 class WindowMixin(object):
 
     def menu(self, title, actions=None):
@@ -527,6 +526,13 @@ class MainWindow(QMainWindow, WindowMixin):
         # Open Dir if deafult file
         if self.filePath and os.path.isdir(self.filePath):
             self.openDirDialog(dirpath=self.filePath)
+            
+        self.createCanvasMenuItem()
+
+    def processTrigger(self,q):
+        print q.text()+" is triggered"
+        if q.text() in self.labelHist:
+            self.savePose(label=q.text())
 
     ## Support Functions ##
     def set_format(self, save_format):
@@ -762,6 +768,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.edit.setEnabled(selected)
         self.actions.shapeLineColor.setEnabled(selected)
         self.actions.shapeFillColor.setEnabled(selected)
+       
+        for item in self.canvas.menus[0].actions():
+            item.setEnabled(selected)
 
     def addLabel(self, shape):
         shape.paintLabel = self.paintLabelsOption.isChecked()
@@ -1448,7 +1457,8 @@ class MainWindow(QMainWindow, WindowMixin):
         if os.path.exists(predefClassesFile) is True:
             with codecs.open(predefClassesFile, 'w', 'utf8') as f:
                 for label in self.labelHist:
-                    f.writelines("{}\n".format(label))
+                    if len(label) > 0 :
+                        f.writelines("{}\n".format(label))
 
     def loadPascalXMLByFilename(self, xmlPath):
         if self.filePath is None:
@@ -1498,8 +1508,7 @@ class MainWindow(QMainWindow, WindowMixin):
                                      ('Change saved folder', self.savedPath))
         self.statusBar().show()
 
-    def savePose(self, _value=False):
-        print("save pose")
+    def savePose(self, _value=False, label=None):
         item = self.currentItem()
         if item is None: 
             return
@@ -1511,13 +1520,15 @@ class MainWindow(QMainWindow, WindowMixin):
         image.fill(255)
         image = drawHumanPoseWithPoints(image, shape.points)
         
-        text = ustr(self.labelDialog.popUp(item.text()))
-        #print(text)
-        if text is None:
+        if label is None:
+            label = self.labelDialog.popUp(item.text())
+        
+        if label is None:
             return
         
-        if text not in self.labelHist:
-            self.labelHist.append(text)
+        if label not in self.labelHist:
+            print("{}-{}".format(label, type(label)))
+            self.labelHist.append(label)
             self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
             # Save PredefinedClasses file
             self.savePredefinedClasses(self.defaultPrefdefClassFile)
@@ -1525,13 +1536,11 @@ class MainWindow(QMainWindow, WindowMixin):
         # get locate to save pose images
         if self.savedPath is None:
             self.changePoseSavedirDialog()
-        savedPath = ustr(self.savedPath)
+        
         nameWithoutExt = os.path.basename(os.path.splitext(self.filePath)[0])
         fileName = "{}_{}".format(nameWithoutExt, id_generator())
-        #print(type(savedPath))
-        #print(type(self.savedPath))
-        #print(type(text))
-        desPath = os.path.join(savedPath, text)
+        
+        desPath = os.path.join(ustr(self.savedPath), ustr(label))
         if not os.path.isdir(desPath):
             os.mkdir(desPath)
             
@@ -1547,8 +1556,10 @@ class MainWindow(QMainWindow, WindowMixin):
             keypointsString += "{}, {}, ".format(p.x(), p.y())
         print("keypoints: {}".format(keypointsString[:-2]))
         with open(txtDesPath, "w") as textFile:
-            textFile.write(keypointsString[:-2])
-        
+            textFile.write(keypointsString[:-2])         
+    
+               
+    
     def poseEstimate(self, _value=False):
         if self.filePath is None:
             self.errorMessage(u'No image loaded',
@@ -1606,7 +1617,26 @@ class MainWindow(QMainWindow, WindowMixin):
                     points.append((int(float(pList[i])), int(float(pList[i+1]))))
                 shapes.append(("standing", points, None, None, False))
             self.loadLabels(shapes)
+            
+            
+    def createCanvasMenuItem(self, enabled=False):
+        action = partial(newAction, self)
+        savePose = action('Save Pose', self.savePose, icon='save', tip=u'Save pose', enabled=enabled)
+        
+        actions = []
+        actions.append(savePose)
+        actions.append(None)
+        
+        if self.labelHist is not None:
+            for label in self.labelHist:
+                ac = action(label, None, icon=None, tip=None, enabled=enabled)
+                actions.append(ac)
                 
+        self.canvas.menus[0].clear()
+        addActions(self.canvas.menus[0], tuple(actions))
+        
+        self.canvas.menus[0].triggered[QAction].connect(self.processTrigger)
+            
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 

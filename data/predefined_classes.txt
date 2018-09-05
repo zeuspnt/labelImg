@@ -1,10 +1,9 @@
+standing
 standing_stretching_one_hand 
-bending_stretching_one_hand 
-sitting_stretching_one_hand 
-squatting_stretching_one_hand 
-crouching_stretching_one_hand 
 standing_stretching_both_hands 
+bending
+bending_stretching_one_hand 
 bending_stretching_both_hands 
+sitting
+sitting_stretching_one_hand 
 sitting_stretching_both_hands 
-squatting_stretching_both_hands 
-crouching_stretching_both_hands
