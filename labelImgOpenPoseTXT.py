@@ -1660,7 +1660,7 @@ def drawHumanPoseWithPoints(img, points):
         p2 = (tmpPoint.x(), tmpPoint.y())
         
         cv2.line(img, p1, p2, common.CocoColors[i], 3)
-    
+
     x_coordinations = []
     y_coordinations = []
     for p in points:
@@ -1669,12 +1669,12 @@ def drawHumanPoseWithPoints(img, points):
             continue
         x_coordinations.append(point.x())
         y_coordinations.append(point.y())
-
+    
     padding = 30
-    x_max = min(max(x_coordinations) + padding, img.shape[0])
+    x_max = min(max(x_coordinations) + padding, img.shape[1])
     x_min = max(min(x_coordinations) - padding, 0)
     
-    y_max = min(max(y_coordinations) + padding, img.shape[1])
+    y_max = min(max(y_coordinations) + padding, img.shape[0])
     y_min = max(min(y_coordinations) - padding, 0)
 
     crop_img = img[y_min:y_max, x_min:x_max]
