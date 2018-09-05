@@ -530,7 +530,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.createCanvasMenuItem()
 
     def processTrigger(self,q):
-        print q.text()+" is triggered"
         if q.text() in self.labelHist:
             self.savePose(label=q.text())
 
